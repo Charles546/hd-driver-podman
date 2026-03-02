@@ -1,0 +1,39 @@
+---
+drivers:
+  daemon:
+    features:
+      operator:
+        - name: "driver:podman"
+    driver:
+      podman:
+        name: podman
+        type: builtin
+        handlerData:
+          shortName: hd-driver-podman
+
+systems:
+  podman:
+    functions:
+      start_pod:
+        driver: podman
+        rawAction: start_pod
+        parameters:
+          pod_spec: $ctx.podman_pod_spec
+          containers: $ctx.podman_containers
+        export:
+          podman_pod_id: $data.pod_id
+      wait_pod:
+        driver: podman
+        rawAction: wait_pod
+        parameters:
+          pod_id: $ctx.podman_pod_id
+        export:
+          podman_pod_status: $labels.status
+      get_pod_log:
+        driver: podman
+        rawAction: get_pod_log
+        parameters:
+          pod_id: $ctx.podman_pod_id
+          delete_on_success: '{{ empty .ctx.podman_delete_on_success | not | return }}'
+        export:
+          podman_pod_log: $data.all
