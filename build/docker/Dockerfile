@@ -1,4 +1,6 @@
-FROM golang:1.26.0-alpine AS build
+ARG HD_VERSION="4.0.0-rc-614e8e3"
+
+FROM golang:1.26.1-alpine AS build
 
 WORKDIR /build/hd-driver-podman
 
@@ -6,7 +8,7 @@ RUN apk add --no-cache git gcc libc-dev gpgme-dev pkgconf btrfs-progs-dev
 COPY ./ ./
 RUN go install -v ./...
 
-FROM docker.io/charleshoney/honeydipper:4.0.0-rc-f42a077
+FROM docker.io/charleshoney/honeydipper:$HD_VERSION
 
 RUN apk add --no-cache gpgme btrfs-progs
 
