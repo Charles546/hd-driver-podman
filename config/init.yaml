@@ -46,3 +46,40 @@ systems:
           delete_on_success: '{{ empty .ctx.podman_delete_on_success | not | return }}'
         export:
           podman_pod_log: $data.all
+      create_volume:
+        driver: podman
+        rawAction: create_volume
+        parameters:
+          name: $?ctx.podman_volume_name
+          volume_spec: $?ctx.podman_volume_spec
+          uri: $?sysData.uri
+          identity: $?sysData.identity
+        export:
+          podman_volume_name: $data.volume_name
+      delete_volume:
+        driver: podman
+        rawAction: delete_volume
+        parameters:
+          volume_name: $ctx.podman_volume_name
+          force: $?ctx.podman_volume_force
+          uri: $?sysData.uri
+          identity: $?sysData.identity
+
+workflows:
+  run_podman:
+    with:
+      podman_system-: podman
+    steps:
+    - call_function: '{{ .ctx.podman_system}}.start_pod'
+    - call_function: '{{ .ctx.podman_system}}.wait_pod'
+    - call_function: '{{ .ctx.podman_system}}.get_pod_log'
+
+  check_slack_interact:
+    call_workflow: slack_ask
+    with:
+      blocks:
+        - type: section
+          text:
+            type: mrkdwn
+            text: "Let's test the slack interact!"
+

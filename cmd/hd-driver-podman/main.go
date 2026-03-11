@@ -22,6 +22,7 @@ import (
 	"github.com/containers/podman/v5/pkg/bindings/containers"
 	"github.com/containers/podman/v5/pkg/bindings/images"
 	"github.com/containers/podman/v5/pkg/bindings/pods"
+	"github.com/containers/podman/v5/pkg/bindings/volumes"
 	"github.com/containers/podman/v5/pkg/domain/entities"
 	"github.com/containers/podman/v5/pkg/specgen"
 	"github.com/honeydipper/honeydipper/v4/pkg/dipper"
@@ -50,6 +51,8 @@ func main() {
 	podman.Driver.Commands["wait_pod|interruptible"] = podman.waitPod
 	podman.Driver.DefaultTimeout["wait_pod"] = "30m"
 	podman.Driver.Commands["get_pod_log"] = podman.getPodLog
+	podman.Driver.Commands["create_volume"] = podman.createVolume
+	podman.Driver.Commands["delete_volume"] = podman.deleteVolume
 	podman.Driver.Reload = func(m *dipper.Message) {}
 	podman.Driver.Run()
 }
@@ -230,5 +233,57 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 	if deleteOnSuccess && succeeded {
 		log.Warningf("removing pod %s", pod_id)
 		dipper.Must(pods.Remove(conn, pod_id, nil))
+	}
+}
+
+func (d *podmanDriver) createVolume(msg *dipper.Message) {
+	log := podman.Driver.GetLogger()
+	log.Debugf("[%s] create volume with payload %+v", podman.Driver.Service, msg.Payload)
+	msg = dipper.DeserializePayload(msg)
+	ctx, cancel := d.GetContext(msg)
+	defer cancel()
+
+	conn := d.getConnection(ctx, msg)
+
+	opts := &entities.VolumeCreateOptions{}
+	if vspec, ok := dipper.GetMapData(msg.Payload, "volume_spec"); ok {
+		dipper.Must(mapstructure.Decode(vspec, opts))
+	}
+
+	name, _ := dipper.GetMapDataStr(msg.Payload, "name")
+	if name != "" {
+		opts.Name = name
+	}
+
+	vol := dipper.Must(volumes.Create(conn, *opts, nil)).(*entities.VolumeConfigResponse)
+
+	msg.Reply <- dipper.Message{
+		Payload: map[string]any{
+			"volume_name": vol.Name,
+		},
+	}
+}
+
+func (d *podmanDriver) deleteVolume(msg *dipper.Message) {
+	log := podman.Driver.GetLogger()
+	log.Debugf("[%s] delete volume with payload %+v", podman.Driver.Service, msg.Payload)
+	msg = dipper.DeserializePayload(msg)
+	ctx, cancel := d.GetContext(msg)
+	defer cancel()
+
+	conn := d.getConnection(ctx, msg)
+
+	volumeName := dipper.MustGetMapDataStr(msg.Payload, "volume_name")
+	force, _ := dipper.GetMapDataBool(msg.Payload, "force")
+
+	opts := &volumes.RemoveOptions{}
+	opts.WithForce(force)
+
+	dipper.Must(volumes.Remove(conn, volumeName, opts))
+
+	msg.Reply <- dipper.Message{
+		Payload: map[string]any{
+			"status": "success",
+		},
 	}
 }
