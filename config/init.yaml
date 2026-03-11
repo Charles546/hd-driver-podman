@@ -18,8 +18,13 @@ systems:
         driver: podman
         rawAction: start_pod
         parameters:
-          pod_spec: $ctx.podman_pod_spec
-          containers: $ctx.podman_containers
+          pod_spec: $?ctx.podman_pod_spec
+          containers: $?ctx.podman_containers
+          uri: $?sysData.uri
+          identity: $?sysData.identity
+          with_work_volume: $?ctx.podman_with_work_volume
+          use_work_volume: $?ctx.podman_use_work_volume
+          work_volume_mount_point: $?ctx.podman_work_volume_mount_point
         export:
           podman_pod_id: $data.pod_id
       wait_pod:
@@ -27,6 +32,8 @@ systems:
         rawAction: wait_pod
         parameters:
           pod_id: $ctx.podman_pod_id
+          uri: $?sysData.uri
+          identity: $?sysData.identity
         export:
           podman_pod_status: $labels.status
       get_pod_log:
@@ -34,6 +41,8 @@ systems:
         rawAction: get_pod_log
         parameters:
           pod_id: $ctx.podman_pod_id
+          uri: $?sysData.uri
+          identity: $?sysData.identity
           delete_on_success: '{{ empty .ctx.podman_delete_on_success | not | return }}'
         export:
           podman_pod_log: $data.all

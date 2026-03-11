@@ -14,6 +14,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/containers/podman/v5/libpod/define"
@@ -53,6 +54,18 @@ func main() {
 	podman.Driver.Run()
 }
 
+func (d *podmanDriver) getConnection(ctx context.Context, m *dipper.Message) context.Context {
+	var opts bindings.Options
+	if uri, ok := dipper.GetMapDataStr(m.Payload, "uri"); ok {
+		opts.URI = uri
+	}
+	if identity, ok := dipper.GetMapDataStr(m.Payload, "identity"); ok {
+		opts.Identity = identity
+	}
+
+	return dipper.Must(bindings.NewConnectionWithOptions(ctx, opts)).(context.Context)
+}
+
 func (d *podmanDriver) startPod(msg *dipper.Message) {
 	log := podman.Driver.GetLogger()
 	log.Debugf("[%s] run container with payload %+v", podman.Driver.Service, msg.Payload)
@@ -63,8 +76,28 @@ func (d *podmanDriver) startPod(msg *dipper.Message) {
 	spec := &entities.PodSpec{
 		PodSpecGen: *specgen.NewPodSpecGenerator(),
 	}
-	dipper.Must(mapstructure.Decode(dipper.MustGetMapData(msg.Payload, "pod_spec"), &spec.PodSpecGen))
+	pspec, _ := dipper.GetMapData(msg.Payload, "pod_spec")
+	if pspec != nil {
+		dipper.Must(mapstructure.Decode(pspec, &spec.PodSpecGen))
+	}
 	spec.PodSpecGen.ExitPolicy = "stop"
+
+	workVolumeMountPoint, _ := dipper.GetMapDataStr(msg.Payload, "work_volume_mount_point")
+	if workVolumeMountPoint == "" {
+		workVolumeMountPoint = "/opt/honeydipper"
+	}
+
+	if useWorkVolume, _ := dipper.GetMapDataStr(msg.Payload, "use_work_volume"); useWorkVolume != "" {
+		spec.PodSpecGen.Volumes = append(spec.PodSpecGen.Volumes, &specgen.NamedVolume{
+			Dest: "/opt/honeydipper",
+			Name: useWorkVolume,
+		})
+	} else if withWorkVolume, _ := dipper.GetMapDataBool(msg.Payload, "with_work_volume"); withWorkVolume {
+		spec.PodSpecGen.Volumes = append(spec.PodSpecGen.Volumes, &specgen.NamedVolume{
+			Dest: workVolumeMountPoint,
+		})
+	}
+
 	dipper.Must(spec.PodSpecGen.Validate())
 
 	cursor := "0"
@@ -76,14 +109,27 @@ func (d *podmanDriver) startPod(msg *dipper.Message) {
 		spec.PodSpecGen.Name += suffix
 	}
 
-	conn := dipper.Must(bindings.NewConnection(ctx, "")).(context.Context)
+	conn := d.getConnection(ctx, msg)
 	pod := dipper.Must(pods.CreatePodFromSpec(conn, spec)).(*entities.PodCreateReport)
 
-	for _, c := range dipper.MustGetMapData(msg.Payload, "containers").([]any) {
+	cspecs := dipper.MustGetMapData(msg.Payload, "containers").([]any)
+	numContainers := len(cspecs)
+
+	for i, c := range cspecs {
 		image := dipper.MustGetMapDataStr(c, "image")
-		if !dipper.Must(images.Exists(conn, image, nil)).(bool) {
+		exists := dipper.Must(images.Exists(conn, image, nil)).(bool)
+		policy, _ := dipper.GetMapDataStr(c, "imagePullPolicy")
+		delete(c.(map[string]any), "imagePullPolicy")
+
+		if !exists && !strings.EqualFold(policy, "Never") || strings.EqualFold(policy, "Always") {
 			dipper.Must(images.Pull(conn, image, nil))
 		}
+
+		initContainerType, _ := dipper.GetMapDataStr(c, "init_container_type")
+		if initContainerType == "" && i < numContainers-1 {
+			c.(map[string]any)["init_container_type"] = "once"
+		}
+
 		cspec := specgen.NewSpecGenerator(image, false)
 		dipper.Must(json.Unmarshal(dipper.SerializeContent(c), cspec))
 		cspec.Pod = pod.Id
@@ -110,7 +156,7 @@ func (d *podmanDriver) waitPod(msg *dipper.Message) {
 	pod_id := dipper.MustGetMapDataStr(msg.Payload, "pod_id")
 	cmdCtx, cancel := d.GetContext(msg)
 	defer cancel()
-	conn := dipper.Must(bindings.NewConnection(cmdCtx, "")).(context.Context)
+	conn := d.getConnection(cmdCtx, msg)
 
 	inspect := dipper.Must(pods.Inspect(conn, pod_id, nil)).(*entities.PodInspectReport)
 	status := "success"
@@ -145,7 +191,7 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 	pod_id := dipper.MustGetMapDataStr(msg.Payload, "pod_id")
 	cmdCtx, cancel := d.GetContext(msg)
 	defer cancel()
-	conn := dipper.Must(bindings.NewConnection(cmdCtx, "")).(context.Context)
+	conn := d.getConnection(cmdCtx, msg)
 
 	inspect := dipper.Must(pods.Inspect(conn, pod_id, nil)).(*entities.PodInspectReport)
 	var (
