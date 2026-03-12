@@ -71,6 +71,7 @@ workflows:
       podman_system-: podman
     steps:
     - call_function: '{{ .ctx.podman_system}}.start_pod'
+    - call_workflow: $?ctx.podman_on_start
     - call_function: '{{ .ctx.podman_system}}.wait_pod'
     - call_function: '{{ .ctx.podman_system}}.get_pod_log'
 
