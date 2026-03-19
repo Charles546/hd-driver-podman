@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/containers/podman/v5/libpod/define"
 	"github.com/containers/podman/v5/pkg/bindings"
@@ -47,7 +46,9 @@ func main() {
 	initFlags()
 	flag.Parse()
 	podman.Driver = dipper.NewDriver(flag.Arg(0), "podman")
-	podman.Driver.Commands["start_pod"] = podman.startPod
+	podman.Driver.Commands["create_pod"] = podman.createPod
+	podman.Driver.Commands["start_pod|interruptible"] = podman.startPod
+	podman.Driver.DefaultTimeout["start_pod"] = "30m"
 	podman.Driver.Commands["wait_pod|interruptible"] = podman.waitPod
 	podman.Driver.DefaultTimeout["wait_pod"] = "30m"
 	podman.Driver.Commands["get_pod_log"] = podman.getPodLog
@@ -69,7 +70,7 @@ func (d *podmanDriver) getConnection(ctx context.Context, m *dipper.Message) con
 	return dipper.Must(bindings.NewConnectionWithOptions(ctx, opts)).(context.Context)
 }
 
-func (d *podmanDriver) startPod(msg *dipper.Message) {
+func (d *podmanDriver) createPod(msg *dipper.Message) {
 	log := podman.Driver.GetLogger()
 	log.Debugf("[%s] run container with payload %+v", podman.Driver.Service, msg.Payload)
 	msg = dipper.DeserializePayload(msg)
@@ -81,18 +82,18 @@ func (d *podmanDriver) startPod(msg *dipper.Message) {
 	}
 	pspec, _ := dipper.GetMapData(msg.Payload, "pod_spec")
 	if pspec != nil {
-		dipper.Must(mapstructure.Decode(pspec, &spec.PodSpecGen))
+		dipper.Must(json.Unmarshal(dipper.SerializeContent(pspec), &spec.PodSpecGen))
 	}
 	spec.PodSpecGen.ExitPolicy = "stop"
 
 	workVolumeMountPoint, _ := dipper.GetMapDataStr(msg.Payload, "work_volume_mount_point")
 	if workVolumeMountPoint == "" {
-		workVolumeMountPoint = "/opt/honeydipper"
+		workVolumeMountPoint = "/local/honeydipper"
 	}
 
 	if useWorkVolume, _ := dipper.GetMapDataStr(msg.Payload, "use_work_volume"); useWorkVolume != "" {
 		spec.PodSpecGen.Volumes = append(spec.PodSpecGen.Volumes, &specgen.NamedVolume{
-			Dest: "/opt/honeydipper",
+			Dest: workVolumeMountPoint,
 			Name: useWorkVolume,
 		})
 	} else if withWorkVolume, _ := dipper.GetMapDataBool(msg.Payload, "with_work_volume"); withWorkVolume {
@@ -130,7 +131,7 @@ func (d *podmanDriver) startPod(msg *dipper.Message) {
 
 		initContainerType, _ := dipper.GetMapDataStr(c, "init_container_type")
 		if initContainerType == "" && i < numContainers-1 {
-			c.(map[string]any)["init_container_type"] = "once"
+			c.(map[string]any)["init_container_type"] = "always"
 		}
 
 		cspec := specgen.NewSpecGenerator(image, false)
@@ -141,14 +142,34 @@ func (d *podmanDriver) startPod(msg *dipper.Message) {
 		}
 		dipper.Must(containers.CreateWithSpec(conn, cspec, nil))
 	}
-	rpt := dipper.Must(pods.Start(conn, pod.Id, nil)).(*entities.PodStartReport)
 
 	msg.Reply <- dipper.Message{
 		Payload: map[string]any{
-			"pod_id": rpt.Id,
-			"errors": rpt.Errs,
+			"pod_id": pod.Id,
 		},
 	}
+}
+
+func (d *podmanDriver) startPod(msg *dipper.Message) {
+	log := podman.Driver.GetLogger()
+	log.Debugf("[%s] run container with payload %+v", podman.Driver.Service, msg.Payload)
+	msg = dipper.DeserializePayload(msg)
+	ctx, cancel := d.GetContext(msg)
+	defer cancel()
+
+	conn := d.getConnection(ctx, msg)
+	podId := dipper.MustGetMapDataStr(msg.Payload, "pod_id")
+
+	rpt := dipper.Must(pods.Start(conn, podId, nil)).(*entities.PodStartReport)
+
+	ret := dipper.Message{}
+	if len(rpt.Errs) > 0 {
+		ret.Labels = map[string]string{
+			"reason": fmt.Sprintf("error starting pod: %+v", rpt.Errs),
+			"status": "failure",
+		}
+	}
+	msg.Reply <- ret
 }
 
 func (d *podmanDriver) waitPod(msg *dipper.Message) {
@@ -165,6 +186,10 @@ func (d *podmanDriver) waitPod(msg *dipper.Message) {
 	status := "success"
 	reason := ""
 	for _, c := range inspect.Containers {
+		cinfo := dipper.Must(containers.Inspect(conn, c.ID, nil)).(*define.InspectContainerData)
+		if cinfo.IsInfra {
+			continue
+		}
 		extcode := dipper.Must(containers.Wait(conn, c.ID, nil)).(int32)
 		if extcode != 0 {
 			status = "failure"
@@ -199,8 +224,7 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 	inspect := dipper.Must(pods.Inspect(conn, pod_id, nil)).(*entities.PodInspectReport)
 	var (
 		all          string
-		perContainer = map[string]string{}
-		receivers    sync.WaitGroup
+		perContainer      = map[string]string{}
 		succeeded    bool = true
 	)
 	for _, c := range inspect.Containers {
@@ -209,20 +233,21 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 			succeeded = rpt.State.ExitCode == 0
 		}
 		out := make(chan string)
-		receivers.Add(1)
+		fin := make(chan struct{})
 		go func(out chan string) {
-			defer receivers.Done()
+			defer close(fin)
 			for l := range out {
 				log.Warningf("podman pod log: %s", l)
 				all += l
 				perContainer[c.Name] += l
 			}
 		}(out)
-		containers.Logs(conn, c.ID, nil, out, out)
+		var optTrue = true
+		containers.Logs(conn, c.ID, &containers.LogOptions{Stderr: &optTrue, Stdout: &optTrue, Timestamps: &optTrue}, out, out)
 		close(out)
+		<-fin
 	}
 
-	receivers.Wait()
 	msg.Reply <- dipper.Message{
 		Payload: map[string]any{
 			"all":        all,
@@ -253,15 +278,20 @@ func (d *podmanDriver) createVolume(msg *dipper.Message) {
 	name, _ := dipper.GetMapDataStr(msg.Payload, "name")
 	if name != "" {
 		opts.Name = name
+		opts.IgnoreIfExists, _ = dipper.GetMapDataBool(msg.Payload, "ignore_if_exists")
 	}
 
 	vol := dipper.Must(volumes.Create(conn, *opts, nil)).(*entities.VolumeConfigResponse)
-
-	msg.Reply <- dipper.Message{
+	log.Infof("created volume %+v", vol)
+	ret := dipper.Message{
 		Payload: map[string]any{
 			"volume_name": vol.Name,
 		},
 	}
+
+	log.Warningf("message %+v", ret)
+
+	msg.Reply <- ret
 }
 
 func (d *podmanDriver) deleteVolume(msg *dipper.Message) {

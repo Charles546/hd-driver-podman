@@ -4,7 +4,7 @@ drivers:
     features:
       operator:
         - name: "driver:podman"
-    driver:
+    drivers:
       podman:
         name: podman
         type: builtin
@@ -14,9 +14,9 @@ drivers:
 systems:
   podman:
     functions:
-      start_pod:
+      create_pod:
         driver: podman
-        rawAction: start_pod
+        rawAction: create_pod
         parameters:
           pod_spec: $?ctx.podman_pod_spec
           containers: $?ctx.podman_containers
@@ -26,7 +26,14 @@ systems:
           use_work_volume: $?ctx.podman_use_work_volume
           work_volume_mount_point: $?ctx.podman_work_volume_mount_point
         export:
-          podman_pod_id: $data.pod_id
+          podman_pod_id: $?data.pod_id
+      start_pod:
+        driver: podman
+        rawAction: start_pod
+        parameters:
+          pod_id: $ctx.podman_pod_id
+          uri: $?sysData.uri
+          identity: $?sysData.identity
       wait_pod:
         driver: podman
         rawAction: wait_pod
@@ -34,8 +41,6 @@ systems:
           pod_id: $ctx.podman_pod_id
           uri: $?sysData.uri
           identity: $?sysData.identity
-        export:
-          podman_pod_status: $labels.status
       get_pod_log:
         driver: podman
         rawAction: get_pod_log
@@ -44,17 +49,18 @@ systems:
           uri: $?sysData.uri
           identity: $?sysData.identity
           delete_on_success: '{{ empty .ctx.podman_delete_on_success | not | return }}'
-        export:
-          podman_pod_log: $data.all
+        export_on_success:
+          podman_pod_log: $data.all,""
       create_volume:
         driver: podman
         rawAction: create_volume
         parameters:
           name: $?ctx.podman_volume_name
+          ignore_if_exists: '{{ empty .ctx.podman_volume_ignore_if_exists | not | return }}'
           volume_spec: $?ctx.podman_volume_spec
           uri: $?sysData.uri
           identity: $?sysData.identity
-        export:
+        export_on_success:
           podman_volume_name: $data.volume_name
       delete_volume:
         driver: podman
@@ -67,13 +73,40 @@ systems:
 
 workflows:
   run_podman:
+    on_error: continue
     with:
       podman_system-: podman
     steps:
-    - call_function: '{{ .ctx.podman_system}}.start_pod'
+    - call_function: '{{ .ctx.podman_system}}.create_pod'
+      export:
+        podman_error: $?labels.reason
+      export_on_error:
+        podman_error: $labels.reason
     - call_workflow: $?ctx.podman_on_start
+      if:
+        - '$?ctx.podman_on_start'
+        - '$?ctx.podman_pod_id'
+    - call_function: '{{ .ctx.podman_system}}.start_pod'
+      if:
+        - '$?ctx.podman_pod_id'
+      export:
+        podman_error: $?ctx.podman_error,labels.reason
+      export_on_error:
+        podman_error: $ctx.podman_error,labels.reason
     - call_function: '{{ .ctx.podman_system}}.wait_pod'
+      if:
+        - '$?ctx.podman_pod_id'
+      export:
+        podman_error: $?ctx.podman_error,labels.reason
+      export_on_error:
+        podman_error: $ctx.podman_error,labels.reason
     - call_function: '{{ .ctx.podman_system}}.get_pod_log'
+      if:
+        - '$?ctx.podman_pod_id'
+      export:
+        podman_error: $?ctx.podman_error,labels.reason
+      export_on_error:
+        podman_error: $ctx.podman_error,labels.reason
 
   check_slack_interact:
     call_workflow: slack_ask
@@ -83,4 +116,3 @@ workflows:
           text:
             type: mrkdwn
             text: "Let's test the slack interact!"
-
