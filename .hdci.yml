@@ -27,7 +27,7 @@ stages:
     jobs:
       - job_name: go-install
         steps:
-          - run: apk add gpgme-dev && go install ./...
+          - run: apk add --no-cache gcc musl-dev gpgme-dev && go install ./...
   test:
     requires:
       - checkout-and-cache
