@@ -5,6 +5,7 @@ use_templates:
 cache:
   /go/pkg/mod: 'hd-go-mod-cache-{{ replace "/" "_" .ctx.git_repo }}-{{ .ctx.git_commit | trunc 7 }}'
   /go/bin: 'hd-go-bin-cache-{{ replace "/" "_" .ctx.git_repo }}-{{ .ctx.git_commit | trunc 7 }}'
+  /go/go-build: 'hd-go-build-cache-{{ replace "/" "_" .ctx.git_repo }}-{{ .ctx.git_commit | trunc 7 }}'
 
 executors:
   golang:
@@ -12,6 +13,8 @@ executors:
     cache:
       - /go/pkg/mod
       - /go/bin
+    env:
+      GOCACHE: /go/go-build
 
 default_executors+:
   - golang
