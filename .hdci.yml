@@ -1,0 +1,43 @@
+---
+use_templates:
+  - Charles546/honeydipper-ci@refs/heads/main:resources/hdci.tmpl.yml
+
+cache:
+  /go/pkg/mod: 'hd-go-cache-{{ replace "/" "_" .ctx.git_repo }}-{{ .ctx.git_commit | trunc 7 }}'
+
+executors:
+  golang:
+    image: docker.io/library/golang:1.26.1-alpine
+    cache:
+      - /go/pkg/mod
+
+default_executors+:
+  - golang
+
+triggers:
+  - conditions:
+      gh_event: push
+    stages:
+      - test
+      - check-license
+
+stages:
+  checkout-and-cache:
+    jobs:
+      - job_name: go-install
+        steps:
+          - run: go install -v ./...
+  test:
+    requires:
+      - checkout-and-cache
+    jobs:
+      - job_name: check-license
+        steps:
+          - run: go test ./...
+  lint:
+    requires:
+      - checkout-and-cache
+    jobs:
+      - job_name: lint
+        steps:
+          - run: golangci-lint run
