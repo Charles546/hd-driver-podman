@@ -18,8 +18,9 @@ triggers:
   - conditions:
       gh_event: push
     stages:
+      - checkout-and-cache
       - test
-      - check-license
+      - lint
 
 stages:
   checkout-and-cache:
