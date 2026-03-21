@@ -27,7 +27,7 @@ stages:
     jobs:
       - job_name: go-install
         steps:
-          - run: go install ./...
+          - run: apk add gpgme-dev && go install ./...
   test:
     requires:
       - checkout-and-cache
