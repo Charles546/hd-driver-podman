@@ -52,7 +52,4 @@ stages:
       - job_name: lint
         steps:
           - run: golangci-lint run
-            image: golangci/golangci-lint:v2.11.3
-            skip_executors:
-              - add_apk
-              - with_secret_driver
+            image: golangci/golangci-lint:v2.11.3-alpine
