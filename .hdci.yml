@@ -55,3 +55,4 @@ stages:
             image: golangci/golangci-lint:v2.11.3
             skip_executors:
               - add_apk
+              - with_secret_driver
