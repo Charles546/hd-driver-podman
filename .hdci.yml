@@ -8,10 +8,11 @@ cache:
   /tmp/go-build: 'hd-go-build-cache-{{ replace "/" "_" .ctx.git_repo }}-{{ .ctx.git_commit | trunc 7 }}'
 
 executors:
-  golang:
-    image: docker.io/library/golang:1.26.1-alpine
+  add_apk:
     run_++: |+
       apk add --no-cache gcc musl-dev gpgme-dev pkgconf btrfs-progs-dev
+  golang:
+    image: docker.io/library/golang:1.26.1-alpine
     cache:
       - /go/pkg/mod
       - /go/bin
@@ -21,6 +22,7 @@ executors:
 
 default_executors+:
   - golang
+  - add_apk
 
 triggers:
   - conditions:
@@ -40,7 +42,7 @@ stages:
     requires:
       - checkout-and-cache
     jobs:
-      - job_name: check-license
+      - job_name: go_test
         steps:
           - run: go test ./...
   lint:
@@ -51,4 +53,5 @@ stages:
         steps:
           - run: golangci-lint run
             image: golangci/golangci-lint:v2.11.3
-            run_: ""
+        skip_executors:
+          - add_apk
