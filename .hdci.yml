@@ -53,5 +53,5 @@ stages:
         steps:
           - run: golangci-lint run
             image: golangci/golangci-lint:v2.11.3
-        skip_executors:
-          - add_apk
+            skip_executors:
+              - add_apk
