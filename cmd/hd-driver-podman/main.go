@@ -226,18 +226,22 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 		all          string
 		perContainer      = map[string]string{}
 		succeeded    bool = true
+		reason       string
 	)
 	for _, c := range inspect.Containers {
 		if succeeded {
 			rpt := dipper.Must(containers.Inspect(conn, c.ID, nil)).(*define.InspectContainerData)
 			succeeded = rpt.State.ExitCode == 0
+			if !succeeded && reason == "" {
+				reason = fmt.Sprintf("container %s failed with exit code %d", c.Name, rpt.State.ExitCode)
+			}
 		}
 		out := make(chan string)
 		fin := make(chan struct{})
 		go func(out chan string) {
 			defer close(fin)
 			for l := range out {
-				log.Warningf("podman pod log: %s", l)
+				// log.Warningf("podman pod log: %s", l)
 				all += l
 				perContainer[c.Name] += l
 			}
@@ -248,11 +252,20 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 		<-fin
 	}
 
+	labels := map[string]string{
+		"status": "success",
+	}
+	if !succeeded {
+		labels["status"] = "failure"
+		labels["reason"] = reason
+	}
+
 	msg.Reply <- dipper.Message{
 		Payload: map[string]any{
 			"all":        all,
 			"containers": perContainer,
 		},
+		Labels: labels,
 	}
 
 	if deleteOnSuccess && succeeded {

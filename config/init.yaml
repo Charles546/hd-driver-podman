@@ -49,7 +49,7 @@ systems:
           uri: $?sysData.uri
           identity: $?sysData.identity
           delete_on_success: '{{ empty .ctx.podman_delete_on_success | not | return }}'
-        export_on_success:
+        export:
           podman_pod_log: $data.all,""
       create_volume:
         driver: podman
