@@ -73,7 +73,6 @@ systems:
 
 workflows:
   run_podman:
-    on_error: continue
     with:
       podman_system-: podman
     steps:
@@ -82,31 +81,26 @@ workflows:
         podman_error: $?labels.reason
       export_on_error:
         podman_error: $labels.reason
-    - call_workflow: $?ctx.podman_on_start
-      if:
-        - '$?ctx.podman_on_start'
-        - '$?ctx.podman_pod_id'
-    - call_function: '{{ .ctx.podman_system}}.start_pod'
-      if:
-        - '$?ctx.podman_pod_id'
-      export:
-        podman_error: $?ctx.podman_error,labels.reason
-      export_on_error:
-        podman_error: $ctx.podman_error,labels.reason
-    - call_function: '{{ .ctx.podman_system}}.wait_pod'
-      if:
-        - '$?ctx.podman_pod_id'
-      export:
-        podman_error: $?ctx.podman_error,labels.reason
-      export_on_error:
-        podman_error: $ctx.podman_error,labels.reason
-    - call_function: '{{ .ctx.podman_system}}.get_pod_log'
-      if:
-        - '$?ctx.podman_pod_id'
-      export:
-        podman_error: $?ctx.podman_error,labels.reason
-      export_on_error:
-        podman_error: $ctx.podman_error,labels.reason
+      with:
+        hooks:
+          on_success: $?ctx.podman_on_start
+    - on_error: continue
+      steps:
+        - call_function: '{{ .ctx.podman_system}}.start_pod'
+          export:
+            podman_error: $?ctx.podman_error,labels.reason
+          export_on_error:
+            podman_error: $ctx.podman_error,labels.reason
+        - call_function: '{{ .ctx.podman_system}}.wait_pod'
+          export:
+            podman_error: $?ctx.podman_error,labels.reason
+          export_on_error:
+            podman_error: $ctx.podman_error,labels.reason
+        - call_function: '{{ .ctx.podman_system}}.get_pod_log'
+          export:
+            podman_error: $?ctx.podman_error,labels.reason
+          export_on_error:
+            podman_error: $ctx.podman_error,labels.reason
 
   check_slack_interact:
     call_workflow: slack_ask
