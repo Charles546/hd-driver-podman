@@ -3,9 +3,9 @@ use_templates:
   - Charles546/honeydipper-ci@refs/heads/main:resources/hdci.tmpl.yml
 
 cache:
-  /go/pkg/mod: 'hd-go-mod-cache-{{ replace "/" "_" .ctx.git_repo }}-{{ .ctx.git_commit | trunc 7 }}'
-  /go/bin: 'hd-go-bin-cache-{{ replace "/" "_" .ctx.git_repo }}-{{ .ctx.git_commit | trunc 7 }}'
-  /tmp/go-build: 'hd-go-build-cache-{{ replace "/" "_" .ctx.git_repo }}-{{ .ctx.git_commit | trunc 7 }}'
+  - /go/pkg/mod
+  - /go/bin
+  - /tmp/go-build
 
 executors:
   add_apk:
