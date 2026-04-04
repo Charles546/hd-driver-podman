@@ -82,7 +82,10 @@ func (d *podmanDriver) createPod(msg *dipper.Message) {
 	}
 	pspec, _ := dipper.GetMapData(msg.Payload, "pod_spec")
 	if pspec != nil {
-		dipper.Must(json.Unmarshal(dipper.SerializeContent(pspec), &spec.PodSpecGen))
+		e := json.Unmarshal(dipper.SerializeContent(pspec), &spec.PodSpecGen)
+		if e != nil {
+			panic(fmt.Errorf("%w: %s", e, string(dipper.SerializeContent(pspec))))
+		}
 	}
 	spec.PodSpecGen.ExitPolicy = "stop"
 
@@ -135,7 +138,10 @@ func (d *podmanDriver) createPod(msg *dipper.Message) {
 		}
 
 		cspec := specgen.NewSpecGenerator(image, false)
-		dipper.Must(json.Unmarshal(dipper.SerializeContent(c), cspec))
+		e := json.Unmarshal(dipper.SerializeContent(c), cspec)
+		if e != nil {
+			panic(fmt.Errorf("%w: %s", e, string(dipper.SerializeContent(c))))
+		}
 		cspec.Pod = pod.Id
 		if cspec.Name != "" {
 			cspec.Name += suffix + "-c"
