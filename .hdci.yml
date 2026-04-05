@@ -44,7 +44,7 @@ stages:
     jobs:
       - job_name: go_test
         steps:
-          - run: echo $TEST && go test -v ./...
+          - run: echo $TEST && go test -v ./... && sleep 10
             env:
               TEST: hd-lookup:test
   lint:
