@@ -44,7 +44,9 @@ stages:
     jobs:
       - job_name: go_test
         steps:
-          - run: go test ./...
+          - run: echo $TEST && go test -v ./...
+            env:
+              TEST: hd-lookup:test
   lint:
     requires:
       - checkout-and-cache
