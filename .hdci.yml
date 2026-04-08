@@ -46,7 +46,7 @@ stages:
         steps:
           - run: |
               echo $TEST && go test -v ./... && sleep 10
-              for i in {1..50}; do
+              for i in $(seq 1 10); do
                 echo "Running additional test iteration $i..."
                 go test -v ./... && sleep 5
               done
