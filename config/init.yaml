@@ -27,6 +27,11 @@ systems:
           work_volume_mount_point: $?ctx.podman_work_volume_mount_point
         export:
           podman_pod_id: $?data.pod_id
+          _log_stream:
+            pod_id: $?data.pod_id
+            provider: podman
+            gh_slug: '{{ resolve_gh_slug .ctx.gh_slug .ctx.git_repo .event.json.repository.full_name }}'
+            stream_token: '{{ sign_pod_id .data.pod_id (resolve_gh_slug .ctx.gh_slug .ctx.git_repo .event.json.repository.full_name) }}'
       start_pod:
         driver: podman
         rawAction: start_pod

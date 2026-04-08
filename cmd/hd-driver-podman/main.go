@@ -52,6 +52,7 @@ func main() {
 	podman.Driver.Commands["wait_pod|interruptible"] = podman.waitPod
 	podman.Driver.DefaultTimeout["wait_pod"] = "30m"
 	podman.Driver.Commands["get_pod_log"] = podman.getPodLog
+	podman.Driver.RPCHandlers["get_pod_log_tail"] = podman.getPodLogTail
 	podman.Driver.Commands["create_volume"] = podman.createVolume
 	podman.Driver.Commands["delete_volume"] = podman.deleteVolume
 	podman.Driver.Reload = func(m *dipper.Message) {}
