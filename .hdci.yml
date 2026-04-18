@@ -2,6 +2,9 @@
 use_templates:
   - Charles546/honeydipper-ci@refs/heads/main:resources/hdci.tmpl.yml
 
+settings:
+  worker: k8s_default
+
 cache:
   - /go/pkg/mod
   - /go/bin
