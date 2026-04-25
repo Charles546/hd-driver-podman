@@ -72,8 +72,8 @@ func (d *podmanDriver) getConnection(ctx context.Context, m *dipper.Message) con
 }
 
 func (d *podmanDriver) createPod(msg *dipper.Message) {
-	log := podman.Driver.GetLogger()
-	log.Debugf("[%s] run container with payload %+v", podman.Driver.Service, msg.Payload)
+	log := podman.GetLogger()
+	log.Debugf("[%s] run container with payload %+v", podman.Service, msg.Payload)
 	msg = dipper.DeserializePayload(msg)
 	ctx, cancel := d.GetContext(msg)
 	defer cancel()
@@ -158,8 +158,8 @@ func (d *podmanDriver) createPod(msg *dipper.Message) {
 }
 
 func (d *podmanDriver) startPod(msg *dipper.Message) {
-	log := podman.Driver.GetLogger()
-	log.Debugf("[%s] run container with payload %+v", podman.Driver.Service, msg.Payload)
+	log := podman.GetLogger()
+	log.Debugf("[%s] run container with payload %+v", podman.Service, msg.Payload)
 	msg = dipper.DeserializePayload(msg)
 	ctx, cancel := d.GetContext(msg)
 	defer cancel()
@@ -282,8 +282,8 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 }
 
 func (d *podmanDriver) createVolume(msg *dipper.Message) {
-	log := podman.Driver.GetLogger()
-	log.Debugf("[%s] create volume with payload %+v", podman.Driver.Service, msg.Payload)
+	log := podman.GetLogger()
+	log.Debugf("[%s] create volume with payload %+v", podman.Service, msg.Payload)
 	msg = dipper.DeserializePayload(msg)
 	ctx, cancel := d.GetContext(msg)
 	defer cancel()
@@ -315,8 +315,8 @@ func (d *podmanDriver) createVolume(msg *dipper.Message) {
 }
 
 func (d *podmanDriver) deleteVolume(msg *dipper.Message) {
-	log := podman.Driver.GetLogger()
-	log.Debugf("[%s] delete volume with payload %+v", podman.Driver.Service, msg.Payload)
+	log := podman.GetLogger()
+	log.Debugf("[%s] delete volume with payload %+v", podman.Service, msg.Payload)
 	msg = dipper.DeserializePayload(msg)
 	ctx, cancel := d.GetContext(msg)
 	defer cancel()
