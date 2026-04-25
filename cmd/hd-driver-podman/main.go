@@ -231,8 +231,8 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 	inspect := dipper.Must(pods.Inspect(conn, pod_id, nil)).(*entities.PodInspectReport)
 	var (
 		all          string
-		perContainer      = map[string]string{}
-		succeeded         = true
+		perContainer = map[string]string{}
+		succeeded    = true
 		reason       string
 	)
 	for _, c := range inspect.Containers {
