@@ -46,17 +46,17 @@ func main() {
 	initFlags()
 	flag.Parse()
 	podman.Driver = dipper.NewDriver(flag.Arg(0), "podman")
-	podman.Driver.Commands["create_pod"] = podman.createPod
-	podman.Driver.Commands["start_pod|interruptible"] = podman.startPod
-	podman.Driver.DefaultTimeout["start_pod"] = "30m"
-	podman.Driver.Commands["wait_pod|interruptible"] = podman.waitPod
-	podman.Driver.DefaultTimeout["wait_pod"] = "30m"
-	podman.Driver.Commands["get_pod_log"] = podman.getPodLog
-	podman.Driver.RPCHandlers["get_pod_log_tail"] = podman.getPodLogTail
-	podman.Driver.Commands["create_volume"] = podman.createVolume
-	podman.Driver.Commands["delete_volume"] = podman.deleteVolume
-	podman.Driver.Reload = func(m *dipper.Message) {}
-	podman.Driver.Run()
+	podman.Commands["create_pod"] = podman.createPod
+	podman.Commands["start_pod|interruptible"] = podman.startPod
+	podman.DefaultTimeout["start_pod"] = "30m"
+	podman.Commands["wait_pod|interruptible"] = podman.waitPod
+	podman.DefaultTimeout["wait_pod"] = "30m"
+	podman.Commands["get_pod_log"] = podman.getPodLog
+	podman.RPCHandlers["get_pod_log_tail"] = podman.getPodLogTail
+	podman.Commands["create_volume"] = podman.createVolume
+	podman.Commands["delete_volume"] = podman.deleteVolume
+	podman.Reload = func(m *dipper.Message) {}
+	podman.Run()
 }
 
 func (d *podmanDriver) getConnection(ctx context.Context, m *dipper.Message) context.Context {
@@ -232,7 +232,7 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 	var (
 		all          string
 		perContainer      = map[string]string{}
-		succeeded    bool = true
+		succeeded         = true
 		reason       string
 	)
 	for _, c := range inspect.Containers {
@@ -254,7 +254,7 @@ func (d *podmanDriver) getPodLog(msg *dipper.Message) {
 			}
 		}(out)
 		var optTrue = true
-		containers.Logs(conn, c.ID, &containers.LogOptions{Stderr: &optTrue, Stdout: &optTrue, Timestamps: &optTrue}, out, out)
+		_ = containers.Logs(conn, c.ID, &containers.LogOptions{Stderr: &optTrue, Stdout: &optTrue, Timestamps: &optTrue}, out, out)
 		close(out)
 		<-fin
 	}
