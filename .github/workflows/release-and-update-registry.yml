@@ -33,7 +33,7 @@ jobs:
       binary_name: hd-driver-podman
       go_build_path: ./cmd/hd-driver-podman
       release_tag: ${{ needs.prepare.outputs.release_tag }}
-      manifest_file: podman.json
+      manifest_file: hd-driver-podman.json
       build_image: golang:1.26-alpine
       cgo_enabled: "1"
       container_prerequisites: "apk add --no-cache gcc musl-dev pkgconfig gpgme-dev libgpg-error-dev libassuan-dev btrfs-progs-dev lvm2-dev"
