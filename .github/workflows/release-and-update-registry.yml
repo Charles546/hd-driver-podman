@@ -37,7 +37,7 @@ jobs:
       build_image: golang:1.24-alpine
       cgo_enabled: "1"
       container_prerequisites: "apk add --no-cache gcc musl-dev pkgconfig gpgme-dev btrfs-progs-dev lvm2-dev"
-      build_flags: "-ldflags=\"-extldflags '-static'\""
+      build_flags: "-ldflags=-extldflags '-static'"
       mirror_url: https://charles546.github.io/honeydipper-registry/artifacts/hd-driver-podman/${{ needs.prepare.outputs.release_tag }}/linux-amd64/hd-driver-podman
     secrets:
       registry_repo_token: ${{ secrets.REGISTRY_REPO_TOKEN }}
