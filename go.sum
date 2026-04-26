@@ -145,10 +145,8 @@ github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
-github.com/honeydipper/honeydipper/v4 v4.0.0-20260310202506-614e8e33ce8f h1:uTJlEoL94hicslVYN3IL7S3rxT5KJB0Er3bXu2TDO1A=
-github.com/honeydipper/honeydipper/v4 v4.0.0-20260310202506-614e8e33ce8f/go.mod h1:923K02HJPTYvFaGgcoqfCodXiIRyt5Tw2pkE0weiAJM=
-github.com/honeydipper/honeydipper/v4 v4.0.0-20260319043115-ddaf102c56fa h1:pgSoShSbuPfcq0LYISDWDeVAX76JXMQijZ69OYO6IWg=
-github.com/honeydipper/honeydipper/v4 v4.0.0-20260319043115-ddaf102c56fa/go.mod h1:EpIT1IyLOmRBf1/NrUpUg3AsAhZwYL21FxhbPAqQFv4=
+github.com/honeydipper/honeydipper/v4 v4.0.0-alpha2 h1:FHmAV5wqHBHVtFtQ2ZO4XTlYYc4YVeCWCvQmW7Tk2Dk=
+github.com/honeydipper/honeydipper/v4 v4.0.0-alpha2/go.mod h1:EpIT1IyLOmRBf1/NrUpUg3AsAhZwYL21FxhbPAqQFv4=
 github.com/huandu/xstrings v1.5.0 h1:2ag3IFq9ZDANvthTwTiqSSZLjDc+BedvHPAp5tJy2TI=
 github.com/huandu/xstrings v1.5.0/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq4ovT0aE=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=

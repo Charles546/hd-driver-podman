@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/containers/podman/v5 v5.8.0
-	github.com/honeydipper/honeydipper/v4 v4.0.0-20260319043115-ddaf102c56fa
+	github.com/honeydipper/honeydipper/v4 v4.0.0-alpha2
 	github.com/mitchellh/mapstructure v1.5.0
 )
 
