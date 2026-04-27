@@ -29,6 +29,8 @@ drivers:
 {% if .options.version %}
           version: '{% .options.version %}'
 {% end %}
+          requiredPackages:
+            - gpgme
 {% end %}
 
 systems:
