@@ -3,7 +3,7 @@ use_templates:
   - Charles546/honeydipper-ci@refs/heads/main:resources/hdci.tmpl.yml
 
 settings:
-  worker: k8s_default
+  worker: podman_default
 
 cache:
   - /go/pkg/mod
@@ -30,10 +30,19 @@ default_executors+:
 triggers:
   - conditions:
       gh_event: push
+      git_ref!:
+        - 'refs/heads/main'
+        - ':regex:^refs\/tags\/v.*'
+      git_commit_message!: ':regex:.*\[skip ci\].*'
     stages:
       - checkout-and-cache
       - test
       - lint
+  - conditions:
+      gh_event: push
+      git_ref: 'refs/heads/main'
+    stages:
+      - release
 
 stages:
   checkout-and-cache:
@@ -63,3 +72,25 @@ stages:
         steps:
           - run: golangci-lint run
             image: golangci/golangci-lint:v2.11.3-alpine
+
+  release:
+    requires:
+      - checkout-and-cache
+    jobs:
+      - job_name: semantic-release
+        steps:
+          - run: go build ./...
+          - image: docker.io/library/node:22-alpine
+            run: |
+              npm install -g semantic-release \
+                @semantic-release/changelog \
+                @semantic-release/git \
+                @semantic-release/github \
+                @semantic-release/commit-analyzer \
+                @semantic-release/release-notes-generator
+              npx semantic-release
+            skip_executors:
+              - golang
+              - add_apk
+            env:
+              GITHUB_TOKEN: hd-lookup:gh_pat
