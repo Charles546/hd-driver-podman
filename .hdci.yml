@@ -57,10 +57,9 @@ stages:
       - job_name: go_test
         steps:
           - run: |
-              echo $TEST && go test -v ./... && sleep 10
-              for i in $(seq 1 10); do
-                echo "Running additional test iteration $i..."
-                go test -v ./... && sleep 5
+              for i in $(seq 1 3); do
+                echo "Running test iteration $i..."
+                go test -count=1 -v ./... && sleep 5
               done
 
   lint:
@@ -92,4 +91,4 @@ stages:
               - golang
               - add_apk
             env:
-              GITHUB_TOKEN: hd-lookup:gh_pat
+              GITHUB_TOKEN: hd-lookup:github_pat
