@@ -81,6 +81,7 @@ stages:
           - run: go build ./...
           - image: docker.io/library/node:22-alpine
             run: |
+              apk add --no-cache git
               npm install -g semantic-release \
                 @semantic-release/changelog \
                 @semantic-release/git \
