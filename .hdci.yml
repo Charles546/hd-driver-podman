@@ -62,8 +62,7 @@ stages:
                 echo "Running additional test iteration $i..."
                 go test -v ./... && sleep 5
               done
-            env:
-              TEST: hd-lookup:test
+
   lint:
     requires:
       - checkout-and-cache
@@ -71,7 +70,7 @@ stages:
       - job_name: lint
         steps:
           - run: golangci-lint run
-            image: golangci/golangci-lint:v2.11.3-alpine
+            image: docker.io/golangci/golangci-lint:v2.11.3-alpine
 
   release:
     requires:
