@@ -30,7 +30,14 @@ drivers:
           version: '{% .options.version %}'
 {% end %}
           requiredPackages:
-            - gpgme
+            apk:
+              - gpgme
+            apt:
+              - libgpgme11
+            dnf:
+              - gpgme
+            brew:
+              - gpgme
 {% end %}
 
 systems:
