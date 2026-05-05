@@ -35,24 +35,25 @@ triggers:
         - ':regex:^refs\/tags\/v.*'
       git_commit_message!: ':regex:.*\[skip ci\].*'
     stages:
-      - checkout-and-cache
+      - install-and-cache
       - test
       - lint
   - conditions:
       gh_event: push
       git_ref: 'refs/heads/main'
     stages:
+      - install-and-cache
       - release
 
 stages:
-  checkout-and-cache:
+  install-and-cache:
     jobs:
       - job_name: go-install
         steps:
           - run: go install ./...
   test:
     requires:
-      - checkout-and-cache
+      - install-and-cache
     jobs:
       - job_name: go_test
         steps:
@@ -64,7 +65,7 @@ stages:
 
   lint:
     requires:
-      - checkout-and-cache
+      - install-and-cache
     jobs:
       - job_name: lint
         steps:
@@ -73,7 +74,7 @@ stages:
 
   release:
     requires:
-      - checkout-and-cache
+      - install-and-cache
     jobs:
       - job_name: semantic-release
         steps:
