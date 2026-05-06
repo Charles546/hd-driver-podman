@@ -1,3 +1,10 @@
+## [0.4.2](https://github.com/Charles546/hd-driver-podman/compare/v0.4.1...v0.4.2) (2026-05-06)
+
+
+### Bug Fixes
+
+* semantic release retrieve binary from cache ([#12](https://github.com/Charles546/hd-driver-podman/issues/12)) ([f702863](https://github.com/Charles546/hd-driver-podman/commit/f702863d330d2674723306abed3f9d47365959a1))
+
 ## [0.4.1](https://github.com/Charles546/hd-driver-podman/compare/v0.4.0...v0.4.1) (2026-05-06)
 
 
