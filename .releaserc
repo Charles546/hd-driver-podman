@@ -11,7 +11,7 @@
             "@semantic-release/github",
             {
                "assets": [
-                    "cmd/hd-driver-podman/hd-driver-podman"
+                    {"path": "./hd-driver-podman-linux-amd64", "label": "Linux AMD64"}
                 ]
             }
         ]
