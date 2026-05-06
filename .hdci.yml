@@ -80,7 +80,7 @@ stages:
         steps:
           - image: docker.io/library/node:22-alpine
             run: |
-              cp /go/bin/hd-driver-podman ./hd-driver-podman/hd-driver-podman-linux-amd64
+              cp /go/bin/hd-driver-podman ./hd-driver-podman-linux-amd64
 
               apk add --no-cache git
               npm install -g semantic-release \
