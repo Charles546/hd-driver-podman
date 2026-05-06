@@ -1,3 +1,10 @@
+## [0.4.3](https://github.com/Charles546/hd-driver-podman/compare/v0.4.2...v0.4.3) (2026-05-06)
+
+
+### Bug Fixes
+
+* correct cp destination ([#13](https://github.com/Charles546/hd-driver-podman/issues/13)) ([512a35b](https://github.com/Charles546/hd-driver-podman/commit/512a35bee5f498c36d07fc512b051bca644307da))
+
 ## [0.4.2](https://github.com/Charles546/hd-driver-podman/compare/v0.4.1...v0.4.2) (2026-05-06)
 
 
