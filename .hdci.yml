@@ -32,7 +32,7 @@ triggers:
       gh_event: push
       git_ref!:
         - 'refs/heads/main'
-        - ':regex:^refs\/tags\/v.*'
+        - ":regex:^refs\\/tags\\/v.*"
       git_commit_message!: ':regex:.*\[skip ci\].*'
     stages:
       - install-and-cache
@@ -78,9 +78,10 @@ stages:
     jobs:
       - job_name: semantic-release
         steps:
-          - run: go build ./...
           - image: docker.io/library/node:22-alpine
             run: |
+              cp /go/bin/hd-driver-podman ./hd-driver-podman/hd-driver-podman-linux-amd64
+
               apk add --no-cache git
               npm install -g semantic-release \
                 @semantic-release/changelog \
