@@ -93,5 +93,7 @@ stages:
             skip_executors:
               - golang
               - add_apk
+            cache:
+              - /go/bin
             env:
               GITHUB_TOKEN: hd-lookup:github_pat
