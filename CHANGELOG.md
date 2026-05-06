@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/Charles546/hd-driver-podman/compare/v0.4.0...v0.4.1) (2026-05-06)
+
+
+### Bug Fixes
+
+* add binary during release ([#11](https://github.com/Charles546/hd-driver-podman/issues/11)) ([7f1516d](https://github.com/Charles546/hd-driver-podman/commit/7f1516d87268bc741950ce8b54f06720fe00b345))
+
 # [0.4.0](https://github.com/Charles546/hd-driver-podman/compare/v0.3.0...v0.4.0) (2026-05-05)
 
 
