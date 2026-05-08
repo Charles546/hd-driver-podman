@@ -1,3 +1,10 @@
+## [0.5.1](https://github.com/Charles546/hd-driver-podman/compare/v0.5.0...v0.5.1) (2026-05-08)
+
+
+### Bug Fixes
+
+* avoid commits with skipci trigging release ([a509a8c](https://github.com/Charles546/hd-driver-podman/commit/a509a8cefca18136625f49a4001d553667b6844a))
+
 # [0.5.0](https://github.com/Charles546/hd-driver-podman/compare/v0.4.3...v0.5.0) (2026-05-08)
 
 
