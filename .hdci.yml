@@ -44,6 +44,11 @@ triggers:
     stages:
       - install-and-cache
       - release
+  - conditions:
+      gh_event: release
+      gh_action: published
+    stages:
+      - update-registry
 
 stages:
   install-and-cache:
@@ -97,3 +102,19 @@ stages:
               - /go/bin
             env:
               GITHUB_TOKEN: hd-lookup:github_pat
+
+  update-registry:
+    jobs:
+      - job_name: update-registry
+        workflow: relay
+        parameters:
+          relay_track: update-registry
+          relay_git_repo: Charles546/honeydipper-registry
+          relayed_parameters:
+            manifest_file: podman.json
+            update_latest: true
+            update_channel: stable
+            version: $event.release.tag_name
+            sha256: $event.release.assets.0.sha256
+            asset_url: $event.release.assets.0.browser_download_url
+            binary_name: $event.release.assets.0.name
