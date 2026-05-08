@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/Charles546/hd-driver-podman/compare/v0.4.3...v0.5.0) (2026-05-08)
+
+
+### Features
+
+* relay release event to honeydipper-registry ([a0574a7](https://github.com/Charles546/hd-driver-podman/commit/a0574a7dc220d11a09ee8d5a0d3af3e92298be52))
+
 ## [0.4.3](https://github.com/Charles546/hd-driver-podman/compare/v0.4.2...v0.4.3) (2026-05-06)
 
 
