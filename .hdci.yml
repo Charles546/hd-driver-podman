@@ -41,12 +41,13 @@ triggers:
   - conditions:
       gh_event: push
       git_ref: 'refs/heads/main'
+      git_commit_message!: ':regex:.*\[skip ci\].*'
     stages:
       - install-and-cache
       - release
   - conditions:
       gh_event: release
-      gh_action: published
+      gh_action: released
     stages:
       - update-registry
 
