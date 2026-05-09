@@ -116,6 +116,6 @@ stages:
             update_latest: true
             update_channel: stable
             version: '{{ trimPrefix "refs/tags/" .git_ref }}'
-            sha256: $gh_asset_sha256,""
+            sha256: '{{ with .gh_asset_digest }}{{ trimPrefix "sha256:" . }}{{ end }}'
             asset_url: $gh_asset_url,""
             binary_name: $gh_asset_name,""
