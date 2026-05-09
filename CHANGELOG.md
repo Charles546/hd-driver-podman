@@ -1,3 +1,10 @@
+## [0.5.4](https://github.com/Charles546/hd-driver-podman/compare/v0.5.3...v0.5.4) (2026-05-09)
+
+
+### Bug Fixes
+
+* formalizing automated driver registry update ([fc5867d](https://github.com/Charles546/hd-driver-podman/commit/fc5867de4efa0b16944c1c23e50320b2517eae57))
+
 ## [0.5.3](https://github.com/Charles546/hd-driver-podman/compare/v0.5.2...v0.5.3) (2026-05-09)
 
 
