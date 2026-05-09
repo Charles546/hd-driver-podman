@@ -1,3 +1,11 @@
+## [0.5.2](https://github.com/Charles546/hd-driver-podman/compare/v0.5.1...v0.5.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* have to quote the inline template ([c207c46](https://github.com/Charles546/hd-driver-podman/commit/c207c4685b03f76d267f060e3cfef866147c7caf))
+* use hdci limited template variables in hdci yml ([1e248c6](https://github.com/Charles546/hd-driver-podman/commit/1e248c685e58fae2d72d86968429b7a9303bbe8e))
+
 ## [0.5.1](https://github.com/Charles546/hd-driver-podman/compare/v0.5.0...v0.5.1) (2026-05-08)
 
 
