@@ -108,10 +108,10 @@ stages:
     jobs:
       - job_name: update-registry
         workflow: relay
-        parameters:
+        ctx:
           relay_track: update-registry
           relay_git_repo: Charles546/honeydipper-registry
-          relayed_parameters:
+          relayed_data:
             manifest_file: podman.json
             update_latest: true
             update_channel: stable
