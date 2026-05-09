@@ -1,3 +1,10 @@
+## [0.5.3](https://github.com/Charles546/hd-driver-podman/compare/v0.5.2...v0.5.3) (2026-05-09)
+
+
+### Bug Fixes
+
+* extract sha256 from asset digest ([9b1b734](https://github.com/Charles546/hd-driver-podman/commit/9b1b73463872f03366af9f3d74a10b74b5afbf8b))
+
 ## [0.5.2](https://github.com/Charles546/hd-driver-podman/compare/v0.5.1...v0.5.2) (2026-05-09)
 
 
