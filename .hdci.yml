@@ -115,7 +115,7 @@ stages:
             manifest_file: podman.json
             update_latest: true
             update_channel: stable
-            version: $event.release.tag_name
-            sha256: $event.release.assets.0.sha256
-            asset_url: $event.release.assets.0.browser_download_url
-            binary_name: $event.release.assets.0.name
+            version: {{ trimPrefix "refs/tags/" .git_ref }}
+            sha256: $gh_asset_sha256,""
+            asset_url: $gh_asset_url,""
+            binary_name: $gh_asset_name,""
