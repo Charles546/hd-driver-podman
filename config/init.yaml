@@ -212,69 +212,6 @@ workflows:
     export:
       _output: $ctx.podman_volume_name
 
-  run_script:
-    meta:
-      description: >-
-        Run a script in a container with automatic vault-based secret injection.
-        An init container installs the vault secret driver into a shared work volume,
-        and the script container runs with that driver as its entrypoint to transparently
-        resolve any 'hd-lookup:' values in environment variables. Use this instead of
-        run_podman when the script needs authenticated access to vault-stored secrets,
-        such as GitHub tokens or API keys.
-      inputs:
-        - name: script_image
-          description: Required. Container image to run the script in.
-        - name: script_command
-          description: >-
-            Required. Shell script or command string to execute. Runs via '/bin/sh -c'
-            inside the container.
-        - name: script_env
-          type: object
-          description: >-
-            Optional key/value map of environment variables for the script container.
-            Values prefixed with 'hd-lookup:' are transparently resolved via vault
-            before the script starts.
-        - name: script_volumes
-          type: object
-          description: >-
-            Optional list of extra volumes to mount in the script container. Each
-            entry should be an object with 'name' (volume name) and 'dest' (mount path).
-        - name: podman_use_work_volume
-          description: >-
-            Optional name of an existing named volume to reuse as the shared work
-            volume (mounted at /local/honeydipper). If omitted, a new ephemeral
-            volume is created automatically and deleted when the pod finishes.
-        - name: podman_delete_on_success
-          description: Set to 'true' to automatically delete the pod after successful exit.
-    with:
-      podman_system-: podman
-      podman_with_work_volume: '{{ if empty .ctx.podman_use_work_volume }}true{{ end }}'
-      worker_profile-: $ctx.hdci.workers.{{ .ctx.hdci.worker_default }},ctx.hdci.workers.podman_default
-    steps:
-      - export:
-          podman_containers:
-            - image: $ctx.hdci.worker.identity.sec_driver_image
-              entrypoint:
-                - /bin/sh
-                - -c
-              env:
-                SEC_DRIVER: $ctx.hdci.worker.identity.sec_driver
-                WORK_DIR: '{{ coalesce .ctx.hdci.worker.work_dir "/local/honeydipper" }}'
-              command:
-                - >-
-                  cp $SEC_DRIVER $(dirname $SEC_DRIVER)/docker-entrypoint.sh
-                  $(dirname $SEC_DRIVER)/web "$WORK_DIR" && echo sec driver copied.
-            - image: $ctx.script_image
-              entrypoint:
-                - '{{ coalesce .ctx.hdci.worker.work_dir "/local/honeydipper" }}/docker-entrypoint.sh'
-              command:
-                - /bin/sh
-                - -c
-                - $ctx.script_command
-              env: '{{ merge (default (dict) .ctx.hdci.worker.identity.env | deepCopy) (default (dict) .ctx.worker_profile.identity.setup.env | deepCopy) (default (dict) .ctx.script_env | deepCopy) | return }}'
-              volumes: '{{ concat (default (list) .ctx.worker_profile.identity.setup.volumes) (default (list) .ctx.script_volumes) | return }}'
-      - call_workflow: run_podman
-
   check_slack_interact:
     call_workflow: slack_ask
     with:
