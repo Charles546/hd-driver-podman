@@ -1,3 +1,10 @@
+## [0.5.5](https://github.com/Charles546/hd-driver-podman/compare/v0.5.4...v0.5.5) (2026-05-28)
+
+
+### Bug Fixes
+
+* workdir to be set on container level ([#14](https://github.com/Charles546/hd-driver-podman/issues/14)) ([5ec140a](https://github.com/Charles546/hd-driver-podman/commit/5ec140abad32c3beacbb477bbf49a1d55124b884))
+
 ## [0.5.4](https://github.com/Charles546/hd-driver-podman/compare/v0.5.3...v0.5.4) (2026-05-09)
 
 
