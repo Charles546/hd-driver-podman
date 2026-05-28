@@ -107,6 +107,39 @@ systems:
 
 workflows:
   run_podman:
+    meta:
+      description: >-
+        Run one or more containers as a Podman pod. All containers except the last run as init
+        containers (executed sequentially to completion in order); the last container is the main
+        container. Returns the combined stdout/stderr log output of all containers.
+      inputs:
+        - name: podman_containers
+          type: object
+          description: >-
+            Required. Ordered list of container specifications. Each entry must have an 'image'
+            field and may include 'command' (list), 'env' (key/value object), 'name', 'mounts',
+            'imagePullPolicy' (Always/Never/IfNotPresent), and other Podman SpecGenerator fields.
+            All containers except the last are treated as init containers.
+        - name: podman_pod_spec
+          type: object
+          description: >-
+            Optional pod-level configuration object (Podman PodSpecGenerator fields, e.g. resource
+            limits, DNS settings). Omit for defaults.
+        - name: podman_with_work_volume
+          description: >-
+            Set to 'true' to create an ephemeral shared volume and mount it to all containers at
+            the path given by podman_work_volume_mount_point (default /local/honeydipper).
+        - name: podman_use_work_volume
+          description: >-
+            Optionally, give the name of an existing volume instead of an ephemeral volume to
+            mount as a shared volume to all containers at the path given by
+            podman_work_volume_mount_point.
+        - name: podman_work_volume_mount_point
+          description: >-
+            Mount path for the shared work volume inside each container. Defaults to
+            /local/honeydipper. Only used when podman_with_work_volume is true.
+        - name: podman_delete_on_success
+          description: Set to 'true' to delete the pod after it exits successfully.
     with:
       podman_system-: podman
     steps:
@@ -133,8 +166,51 @@ workflows:
         - call_function: '{{ .ctx.podman_system}}.get_pod_log'
           export:
             podman_error: $?ctx.podman_error,labels.reason
+            _output: $data.all,""
           export_on_error:
             podman_error: $ctx.podman_error,labels.reason
+
+  create_podman_volume:
+    meta:
+      description: >-
+        Create a named Podman volume for persistent storage. The volume persists across pod runs
+        and can be mounted into any run_podman call via podman_use_work_volume. Returns the volume
+        name, which is required for mounting or later deletion.
+      inputs:
+        - name: podman_volume_name
+          description: >-
+            Desired name for the volume. If omitted, Podman auto-generates a name. Store the
+            returned name to mount or delete the volume later.
+        - name: podman_volume_ignore_if_exists
+          description: >-
+            Set to 'true' to succeed silently when a volume with this name already exists, instead
+            of returning an error. Useful for idempotent setup.
+        - name: podman_volume_spec
+          type: object
+          description: >-
+            Optional volume configuration (VolumeCreateOptions fields): 'Driver' (string, default
+            'local'), 'Label' (key/value object), 'Options' (driver-specific key/value object).
+    with:
+      podman_system-: podman
+    call_function: '{{ .ctx.podman_system}}.create_volume'
+    export:
+      _output: $ctx.podman_volume_name
+
+  delete_podman_volume:
+    meta:
+      description: >-
+        Delete a named Podman volume. Use this to free storage after the data is no longer needed.
+      inputs:
+        - name: podman_volume_name
+          description: Required. Name of the volume to delete.
+        - name: podman_volume_force
+          description: >-
+            Set to 'true' to delete the volume even if it is currently in use by a container.
+    with:
+      podman_system-: podman
+    call_function: '{{ .ctx.podman_system}}.delete_volume'
+    export:
+      _output: $ctx.podman_volume_name
 
   check_slack_interact:
     call_workflow: slack_ask

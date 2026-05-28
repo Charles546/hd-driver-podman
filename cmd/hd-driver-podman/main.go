@@ -147,6 +147,9 @@ func (d *podmanDriver) createPod(msg *dipper.Message) {
 		if cspec.Name != "" {
 			cspec.Name += suffix + "-c"
 		}
+		if cspec.WorkDir == "" {
+			cspec.WorkDir = workVolumeMountPoint
+		}
 		dipper.Must(containers.CreateWithSpec(conn, cspec, nil))
 	}
 
