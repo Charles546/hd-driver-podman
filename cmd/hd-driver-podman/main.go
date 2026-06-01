@@ -55,6 +55,7 @@ func main() {
 	podman.RPCHandlers["get_pod_log_tail"] = podman.getPodLogTail
 	podman.Commands["create_volume"] = podman.createVolume
 	podman.Commands["delete_volume"] = podman.deleteVolume
+	podman.Commands["exec"] = podman.exec
 	podman.Reload = func(m *dipper.Message) {}
 	podman.Run()
 }
@@ -153,9 +154,19 @@ func (d *podmanDriver) createPod(msg *dipper.Message) {
 		dipper.Must(containers.CreateWithSpec(conn, cspec, nil))
 	}
 
+	inspect := dipper.Must(pods.Inspect(conn, pod.Id, nil)).(*entities.PodInspectReport)
+	containerIDs := map[string]string{}
+	for _, c := range inspect.Containers {
+		cName := c.Name
+		cName = strings.TrimSuffix(cName, suffix+"-c")
+		containerIDs[cName] = c.ID
+	}
+
+	log.Infof("created pod %s with containers %v", pod.Id, containerIDs)
 	msg.Reply <- dipper.Message{
 		Payload: map[string]any{
-			"pod_id": pod.Id,
+			"pod_id":        pod.Id,
+			"container_ids": containerIDs,
 		},
 	}
 }
