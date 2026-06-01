@@ -1,3 +1,10 @@
+# [0.6.0](https://github.com/Charles546/hd-driver-podman/compare/v0.5.5...v0.6.0) (2026-06-01)
+
+
+### Features
+
+* podman exec script in container ([#16](https://github.com/Charles546/hd-driver-podman/issues/16)) ([202df08](https://github.com/Charles546/hd-driver-podman/commit/202df08f4ae2765d76941d6d064686bd7819b7fd))
+
 ## [0.5.5](https://github.com/Charles546/hd-driver-podman/compare/v0.5.4...v0.5.5) (2026-05-28)
 
 
