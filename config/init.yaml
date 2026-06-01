@@ -56,6 +56,7 @@ systems:
           work_volume_mount_point: $?ctx.podman_work_volume_mount_point
         export:
           podman_pod_id: $?data.pod_id
+          container_ids: $?data.container_ids
           _log_stream:
             pod_id: $?data.pod_id
             provider: podman
@@ -68,6 +69,17 @@ systems:
           pod_id: $ctx.podman_pod_id
           uri: $?sysData.uri
           identity: $?sysData.identity
+      exec:
+        driver: podman
+        rawAction: exec
+        parameters:
+          container_id: $ctx.podman_container_id
+          command: $?ctx.podman_exec_command
+          script: $?ctx.podman_exec_script
+          shell: $?ctx.podman_exec_shell
+        export:
+          podman_exec_output: '{{ .data.output }}'
+          podman_exec_exit_code: '{{ .data.exit_code }}'
       wait_pod:
         driver: podman
         rawAction: wait_pod
